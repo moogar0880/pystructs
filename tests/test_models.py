@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pystructs import fields
-from pystructs.models import StructObject
+from pystructs.models import StructObject, NativeByteOrder
 
 
 def test_simple_object():
@@ -71,3 +71,17 @@ def test_dependant():
     assert vls.length == 6
     assert vls.string_data == 'foobar'
     assert vls.pack() == data
+
+
+def test_override_byte_order():
+    class MyData(StructObject):
+        length = fields.IntegerField()
+        char = fields.UnsignedCharField(byte_order=NativeByteOrder)
+
+    data = b'\x00\x00\x00\x06\x0c'
+    d = MyData()
+    d.unpack(data)
+
+    assert d.length == 6
+    assert d.char == 12
+    assert d.pack() == data
