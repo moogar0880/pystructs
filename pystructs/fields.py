@@ -4,8 +4,9 @@ class StructFieldDescriptor:
     fmt = typ = ctype = None
     size = 0
 
-    def __init__(self, name=None, count=1, sizeof=None):
+    def __init__(self, name=None, count=1, sizeof=None, byte_order=None):
         self.name, self.count, self.sizeof = name, count, sizeof
+        self.byte_order = byte_order
         self.val = None
 
         # if we have a callback to determine our size, then set a default size
@@ -82,7 +83,7 @@ class ShortField(StructFieldDescriptor):
     ctype = 'short'
 
 
-class UnsignedShort(ShortField):
+class UnsignedShortField(ShortField):
     fmt = 'H'
     ctype = 'unsigned short'
 

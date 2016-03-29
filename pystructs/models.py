@@ -42,7 +42,7 @@ class StructObjectMeta(type):
 class StructObject(StructFieldDescriptor, metaclass=StructObjectMeta):
     """Base class for class representations of structured binary data"""
     #: Byte Ordering scheme to use for this class's binary data. Default is
-    #: :const:`NativeByteOrder`
+    #: :const:`NetworkByteOrder`
     BYTE_ORDER = NetworkByteOrder
 
     @property
@@ -91,7 +91,7 @@ class StructObject(StructFieldDescriptor, metaclass=StructObjectMeta):
 
         # map unpacked values to the fields that they correspond to
         for field in self.__fields:
-            fmt = self.BYTE_ORDER + field.format
+            fmt = (field.byte_order or self.BYTE_ORDER) + field.format
             slice_size = field.size * field.count
             if isinstance(field, StructObject):
                 field.val = field.unpack(stream.slice(slice_size))
@@ -116,16 +116,26 @@ class StructObject(StructFieldDescriptor, metaclass=StructObjectMeta):
         :return: The packed :const:`bytes` representation of this
             :class:`StructObject`
         """
-        fmtstr = self.BYTE_ORDER
-        data = []
+        output = b''
         for field in self.__fields:
-            fmtstr += field.format
             if isinstance(field.val, StructObject):
-                data.extend([f.val for f in field.__fields])
+                output += struct.pack(
+                    (field.byte_order or self.BYTE_ORDER) + field.format,
+                    *[f.val for f in field.__fields]
+                )
             elif isinstance(field.val, str):
-                data.append(bytes(field.val, field.encoding or 'utf-8'))
+                output += struct.pack(
+                    (field.byte_order or self.BYTE_ORDER) + field.format,
+                    bytes(field.val, field.encoding or 'utf-8')
+                )
             elif isinstance(field.val, Iterable) and not isinstance(field.val, bytes):
-                data.extend(field.val)
+                output += struct.pack(
+                    (field.byte_order or self.BYTE_ORDER) + field.format,
+                    *field.val
+                )
             else:
-                data.append(field.val)
-        return struct.pack(fmtstr, *data)
+                output += struct.pack(
+                    (field.byte_order or self.BYTE_ORDER) + field.format,
+                    field.val
+                )
+        return output
