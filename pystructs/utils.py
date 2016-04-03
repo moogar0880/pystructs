@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 """Utility functions for the Struct API module"""
 
+
+def safe_decode(string, encoding='utf-8'):
+    """attempt to decode the provided data string using the specified encoding.
+    if a decode error occurs, just return the provided byte string
+    """
+    try:
+        return string.decode(encoding)
+    except UnicodeDecodeError:
+        return string
+
+
 class StatefulByteStream:
     """A :const:`bytes` type wrapper which maintains stateful information about
     how much of the provided bytestream has already been read through
