@@ -85,3 +85,21 @@ def test_override_byte_order():
     assert d.length == 6
     assert d.char == 12
     assert d.pack() == data
+
+
+def test_array_field():
+    class MyDataContainer(StructObject):
+        count = fields.IntegerField()
+        arr = fields.ArrayField(
+            fields.IntegerField,
+            sizeof=lambda x: (x.count * 4),
+            count=lambda x: x.count
+        )
+
+    data = b'\x00\x00\x00\x02\x00\x00\x00\x08\x00\x00\x00\x02'
+    container = MyDataContainer()
+    container.unpack(data)
+    assert container.count == 2
+    assert len(container.arr) == container.count
+    assert container.arr == [8, 2]
+    assert container.pack() == data
