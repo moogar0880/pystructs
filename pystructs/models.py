@@ -94,10 +94,12 @@ class StructObject(StructFieldDescriptor, metaclass=StructObjectMeta):
             field._val = safe_decode(field._val[0], field._encoding)
 
     def _unpack_array(self, field, stream):
+        """Unpack and ArrayField into a list of it's base_field types"""
         _count = field._count(self)
         _size = int(field._sizeof(self) / _count)
+        fmt_size = int(_size / (field._base_field._size or 1))
         field._val = [
-            struct.unpack(self.BYTE_ORDER + '%d%s' % (_size, field._fmt),
+            struct.unpack(self.BYTE_ORDER + '%d%s' % (fmt_size, field._fmt),
                           stream.slice(_size))
             for _ in range(_count)
         ]
@@ -158,24 +160,30 @@ class StructObject(StructFieldDescriptor, metaclass=StructObjectMeta):
         """
         output = b''
         for field in self.__fields:
+            order = field._byte_order or self.BYTE_ORDER
             if isinstance(field._val, StructObject):
                 output += struct.pack(
-                    (field._byte_order or self.BYTE_ORDER) + field._format,
+                    order + field._format,
                     *[f._val for f in field.__fields]
+                )
+            elif isinstance(field, ArrayField):
+                output += struct.pack(
+                    order + '%d%s' % (len(field), field._fmt),
+                    *field._val
                 )
             elif isinstance(field._val, str):
                 output += struct.pack(
-                    (field._byte_order or self.BYTE_ORDER) + field._format,
+                    order + field._format,
                     bytes(field._val, field._encoding or 'utf-8')
                 )
             elif isinstance(field._val, Iterable) and not isinstance(field._val, bytes):
                 output += struct.pack(
-                    (field._byte_order or self.BYTE_ORDER) + field._format,
+                    order + field._format,
                     *field._val
                 )
             else:
                 output += struct.pack(
-                    (field._byte_order or self.BYTE_ORDER) + field._format,
+                    order + field._format,
                     field._val
                 )
         return output
