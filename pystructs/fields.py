@@ -223,3 +223,8 @@ class ArrayField(StructFieldDescriptor):
         have a size
         """
         return self._base_field._size or 1
+
+    def __len__(self):
+        if self._val is None:
+            return 0
+        return len(self._val)
