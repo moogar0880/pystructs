@@ -13,7 +13,7 @@ def test_simple_object():
     s.unpack(data)
     assert s.size == 1
     assert s.pack() == data
-    assert s.ctype == Sized.__qualname__
+    assert s._ctype == Sized.__qualname__
 
 
 def test_count_field():
@@ -30,7 +30,7 @@ def test_count_field():
     assert ex.shorts == (1, 2)
     assert ex.long_data == 3
     assert ex.pack() == data
-    assert ex.ctype == Example.__qualname__
+    assert ex._ctype == Example.__qualname__
 
 
 def test_nested():
